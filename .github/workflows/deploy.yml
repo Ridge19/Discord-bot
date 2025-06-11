@@ -18,6 +18,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.HOST_SSH_KEY }}
 
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.HOST_IP }} >> ~/.ssh/known_hosts
+
       - name: Upload files to server via SCP
         run: |
           rsync -avz --delete \
