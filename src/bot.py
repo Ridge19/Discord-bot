@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 
+import os
+from dotenv import load_dotenv
+
 # music
 from ytmusicapi import YTMusic
 import yt_dlp
@@ -111,4 +114,7 @@ async def stop(ctx):
 
 # Run the bot with the token
 if __name__ == '__main__':
-    bot.run('MTM4MjIyMjYxOTM3MzQ3Mzk1Mw.GPpuPx.qIg2RuoJ5NppVtp2GpLl5HZ6Z6g7KrBLv6Bv04')
+    TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+    if not TOKEN:
+        raise ValueError("DISCORD_BOT_TOKEN not found in .env file.")
+    bot.run(TOKEN)
