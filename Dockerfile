@@ -17,5 +17,5 @@ COPY src/ ./src/
 ENV PYTHONUNBUFFERED=1
 
 # Run the bot
-COPY src/.env ./src/.env
+COPY .env ./src/.env
 CMD ["python", "src/bot.py"]
