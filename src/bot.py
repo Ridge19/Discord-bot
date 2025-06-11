@@ -5,6 +5,8 @@ import aiohttp
 # music
 from ytmusicapi import YTMusic
 import yt_dlp
+#github 
+import requests
 
 intents = discord.Intents.default()
 intents.message_content = True  # Enable message content intent
@@ -217,6 +219,27 @@ async def feedback(ctx, *, feedback: str = None):
     feedback_channel = bot.get_channel(1382393617364287638)
     if feedback_channel:
         await feedback_channel.send(f"Feedback from {ctx.author} ({ctx.author.id}): {feedback}")
+
+@bot.command()
+async def patchnote(ctx):
+    """Fetches the latest commit message from the GitHub repository."""
+    owner = "Ridge19"
+    repo = "Discord-bot"
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                await ctx.send("Couldn't fetch the latest commit right now.")
+                return
+            data = await resp.json()
+            if isinstance(data, list) and len(data) > 0:
+                commit = data[0]
+                message = commit["commit"]["message"]
+                author = commit["commit"]["author"]["name"]
+                sha = commit["sha"][:7]
+                await ctx.send(f"**Latest Patchnote:**\n`{sha}` by **{author}**\n{message}")
+            else:
+                await ctx.send("No commits found.")
 
 # Run the bot with the token
 if __name__ == '__main__':
