@@ -1,0 +1,27 @@
+name: Deploy Discord Bot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.HOST_SSH_KEY }}
+
+      - name: Upload files to server via SCP
+        run: |
+          rsync -avz --delete \
+            --exclude '.git*' \
+            --exclude '.github' \
+            --exclude '__pycache__' \
+            ./ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:${{ secrets.HOST_PATH }}
