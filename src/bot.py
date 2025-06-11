@@ -243,4 +243,4 @@ async def patchnote(ctx):
 
 # Run the bot with the token
 if __name__ == '__main__':
-    bot.run('MTM4MjIyMjYxOTM3MzQ3Mzk1Mw.GfvlbD.JxmDsJ75WQyE7AkunNiPUsfl1D7UXs18oM7VVo')
+    bot.run(os.getenv('DISCORD_BOT_TOKEN'))
