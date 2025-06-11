@@ -203,9 +203,20 @@ async def intro(ctx):
         "I can find music, tell jokes, define words, get statistics and much more!\n"
         "I'm still a work in progress. Feedback is welcome!\n"
         "Use `!help` to see what I can do."
-
     )
     await ctx.send(intro_message)
+
+@bot.command()
+async def feedback(ctx, *, feedback: str = None):
+    """Sends feedback to the developer."""
+    if not feedback:
+        await ctx.send("Please provide some feedback.")
+        return
+    await ctx.send("Feedback received! Thank you for your input.")
+    # Optionally, send feedback to a specific channel (replace CHANNEL_ID with your channel's ID)
+    feedback_channel = bot.get_channel(1382393617364287638)
+    if feedback_channel:
+        await feedback_channel.send(f"Feedback from {ctx.author} ({ctx.author.id}): {feedback}")
 
 # Run the bot with the token
 if __name__ == '__main__':
