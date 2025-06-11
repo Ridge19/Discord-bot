@@ -8,6 +8,9 @@ import yt_dlp
 #github 
 import requests
 
+from dotenv import load_dotenv
+load_dotenv()
+
 intents = discord.Intents.default()
 intents.message_content = True  # Enable message content intent
 
