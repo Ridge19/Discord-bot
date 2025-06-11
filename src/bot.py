@@ -2,9 +2,8 @@ import discord
 from discord.ext import commands
 
 import os
-from dotenv import load_dotenv
 
-load_dotenv(dotenv_path="../.env")
+import aiohttp
 
 # music
 from ytmusicapi import YTMusic
@@ -20,17 +19,13 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name} - {bot.user.id}')
+    print("DISCORD_BOT_TOKEN:", os.getenv('DISCORD_BOT_TOKEN'))
 
 @bot.command()
 async def creator(ctx):
     print(f'Created by: {discord.utils.get(bot.get_all_members(), id=325912667543961600).name}')  # Replace with actual creator ID
     message = f'Created by: {discord.utils.get(bot.get_all_members(), id=325912667543961600).name}'
     await ctx.send(message)
-
-# Example command that the bot can respond to
-@bot.command()
-async def ping(ctx):
-    await ctx.send('Pong!')
 
 # list audit entries (Top 5 latest)
 @bot.command()
@@ -50,8 +45,10 @@ async def audit(ctx):
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("You do not have permission to use this command.")
+        return
     elif isinstance(error, commands.CommandNotFound):
         await ctx.send("Command not found.")
+        return
     else:
         await ctx.send(f"An error occurred: {error}")
 
@@ -106,6 +103,30 @@ async def play(ctx, *, music_name: str):
     vc.play(discord.FFmpegPCMAudio(audio_url))
 
 @bot.command()
+async def define(ctx, *, word: str):
+    """Fetches the definition of a word from dictionaryapi.dev."""
+    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                await ctx.send(f"Could not find a definition for '{word}'.")
+                return
+            data = await resp.json()
+            try:
+                meanings = data[0]['meanings']
+                definitions = meanings[0]['definitions']
+                definition = definitions[0]['definition']
+                await ctx.send(f"**{word}**: {definition}")
+            except (KeyError, IndexError):
+                await ctx.send(f"Could not parse the definition for '{word}'.")
+
+@bot.command()
+async def skip(ctx):
+    if ctx.voice_client.is_playing():
+        ctx.voice_client.stop()
+        await ctx.send("⏭️ Skipped current track.")
+
+@bot.command()
 async def stop(ctx):
     """Stops the music and makes the bot leave the voice channel."""
     if ctx.voice_client:
@@ -114,9 +135,39 @@ async def stop(ctx):
     else:
         await ctx.send("I'm not in a voice channel.")
 
+@bot.command(aliases=['urmum'])
+async def yourmum(ctx):
+    """Sends a random 'yo mama' joke from yomamma-api.herokuapp.com."""
+    url = "https://yomamma-api.herokuapp.com/jokes?count={count}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                await ctx.send("Couldn't fetch a joke right now.")
+                return
+            data = await resp.json()
+            joke = data.get("joke", "No joke found.")
+            await ctx.send(joke)
+
+@bot.command()
+async def joke(ctx):
+    """Sends a random joke from jokeapi.dev."""
+    url = "https://v2.jokeapi.dev/joke/Any"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            print(f"Response status: {resp.status}")
+            if resp.status != 200:
+                await ctx.send("Couldn't fetch a joke right now.")
+                return
+            data = await resp.json()
+            # JokeAPI can return either a 'single' or 'twopart' joke
+            if data.get("type") == "single":
+                joke = data.get("joke", "No joke found.")
+            elif data.get("type") == "twopart":
+                joke = f"{data.get('setup', '')}\n{data.get('delivery', '')}"
+            else:
+                joke = "No joke found."
+            await ctx.send(joke)
+
 # Run the bot with the token
 if __name__ == '__main__':
-    TOKEN = os.getenv('DISCORD_BOT_TOKEN')
-    if not TOKEN:
-        raise ValueError("DISCORD_BOT_TOKEN not found in .env file.")
-    bot.run(TOKEN)
+    bot.run('MTM4MjIyMjYxOTM3MzQ3Mzk1Mw.GfvlbD.JxmDsJ75WQyE7AkunNiPUsfl1D7UXs18oM7VVo')

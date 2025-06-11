@@ -13,9 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy your bot code
 COPY src/ ./src/
 
+# Copy .env to the project root
+COPY .env .env
+
 # Set environment variables (optional)
 ENV PYTHONUNBUFFERED=1
 
 # Run the bot
-COPY .env ./src/.env
 CMD ["python", "src/bot.py"]

@@ -3,3 +3,4 @@ python-dotenv
 ytmusicapi
 pynacl
 yt-dlp
+aiohttp
