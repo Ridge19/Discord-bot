@@ -240,7 +240,13 @@ async def patchnote(ctx):
                 message = commit["commit"]["message"]
                 author = commit["commit"]["author"]["name"]
                 sha = commit["sha"][:7]
-                await ctx.send(f"**Latest Patchnote:**\n`{sha}` by **{author}**\n{message} at {commit['commit']['author']['date']}\n[View on GitHub](https://github.com/{owner}/{repo}/commit/{sha})")
+                commit_url = f"https://github.com/{owner}/{repo}/commit/{commit['sha']}"
+                await ctx.send(
+                    f"**Latest Patchnote:**\n"
+                    f"`{sha}` by **{author}**\n"
+                    f"{message} at {commit['commit']['author']['date']}\n"
+                    f"[View on GitHub]({commit_url})"
+                )
             else:
                 await ctx.send("No commits found.")
 
