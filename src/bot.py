@@ -1,10 +1,7 @@
 import discord
 from discord.ext import commands
-
 import os
-
 import aiohttp
-
 # music
 from ytmusicapi import YTMusic
 import yt_dlp
@@ -19,12 +16,17 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name} - {bot.user.id}')
-    print("DISCORD_BOT_TOKEN:", os.getenv('DISCORD_BOT_TOKEN'))
+    print("DISCORD_BOT_TOKEN:", os.getenv(f'DISCORD_BOT_TOKEN'))
 
 @bot.command()
 async def creator(ctx):
-    print(f'Created by: {discord.utils.get(bot.get_all_members(), id=325912667543961600).name}')  # Replace with actual creator ID
-    message = f'Created by: {discord.utils.get(bot.get_all_members(), id=325912667543961600).name}'
+    """Sends the username of the creator with the given user ID."""
+    creator_id = 325912667543961600
+    creator_user = await bot.fetch_user(creator_id)
+    if creator_user:
+        message = f'Created by: {creator_user.name}'
+    else:
+        message = 'Creator not found.'
     await ctx.send(message)
 
 # list audit entries (Top 5 latest)
@@ -167,6 +169,43 @@ async def joke(ctx):
             else:
                 joke = "No joke found."
             await ctx.send(joke)
+
+@bot.command()
+async def ping(ctx):
+    """Returns the bot's latency."""
+    latency = round(bot.latency * 1000)
+
+
+@bot.command()
+async def stats(ctx):
+    """Returns the bot's statistics."""
+    embed = discord.Embed(title="Bot Statistics", color=discord.Color.blue())
+    embed.add_field(name="Users", value=len(bot.users), inline=True)
+    embed.add_field(name="Servers", value=len(bot.guilds), inline=True)
+    embed.add_field(name="Latency", value=f"{round(bot.latency * 1000)} ms", inline=True)
+    embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar.url)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def restart(ctx):
+    """Restarts the bot (Pterodactyl will auto-restart it)."""
+    if ctx.author.id != 325912667543961600:
+        await ctx.send("You do not have permission to restart the bot.")
+        return
+    await ctx.send("Restarting the bot...")
+    await bot.close()  # This will exit the process, Pterodactyl will restart it
+
+@bot.command()
+async def intro(ctx):
+    """Sends an introduction message."""
+    intro_message = (
+        "Hello! I'm a Discord bot created by the developer: Ridge (@riidgyy)\n"
+        "I can find music, tell jokes, define words, get statistics and much more!\n"
+        "I'm still a work in progress. Feedback is welcome!\n"
+        "Use `!help` to see what I can do."
+
+    )
+    await ctx.send(intro_message)
 
 # Run the bot with the token
 if __name__ == '__main__':
