@@ -207,6 +207,8 @@ async def skip(ctx):
     if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.stop()
         await ctx.send("⏭️ Skipped current track.")
+        # Play the next song in the queue, if any
+        await play_next(ctx)
     else:
         await ctx.send("Nothing is playing to skip.")
 
