@@ -114,29 +114,101 @@ async def play(ctx, *, music_name: str):
     # Play the audio in the voice channel
     vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
 
+# Music queue dictionary: {guild_id: [track_dict, ...]}
+music_queues = {}
+
+def get_guild_queue(ctx):
+    return music_queues.setdefault(ctx.guild.id, [])
+
+async def play_next(ctx):
+    queue = get_guild_queue(ctx)
+    if not queue:
+        await ctx.send("Queue is empty. Leaving the voice channel.")
+        await ctx.voice_client.disconnect()
+        return
+
+    track = queue.pop(0)
+    title = track.get("title", "Unknown")
+    artists = track.get("artists", "Unknown")
+    url = track.get("url")
+
+    await ctx.send(f"Now playing **{title}** by **{artists}**\n{url}")
+
+    ydl_opts = {
+        'format': 'bestaudio[abr>=192]/bestaudio/best',
+        'quiet': True,
+        'extract_flat': False,
+        'noplaylist': True,
+        'default_search': 'auto',
+        'source_address': '0.0.0.0',
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        audio_url = info['url']
+
+    ffmpeg_options = {
+        'options': '-vn -b:a 192k'
+    }
+
+    vc = ctx.voice_client
+    def after_playing(error):
+        fut = discord.utils.run_coroutine_threadsafe(play_next(ctx), bot.loop)
+        try:
+            fut.result()
+        except Exception as e:
+            print(f"Error in after_playing: {e}")
+
+    vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), after=after_playing)
+
 @bot.command()
-async def define(ctx, *, word: str):
-    """Fetches the definition of a word from dictionaryapi.dev."""
-    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status != 200:
-                await ctx.send(f"Could not find a definition for '{word}'.")
-                return
-            data = await resp.json()
-            try:
-                meanings = data[0]['meanings']
-                definitions = meanings[0]['definitions']
-                definition = definitions[0]['definition']
-                await ctx.send(f"**{word}**: {definition}")
-            except (KeyError, IndexError):
-                await ctx.send(f"Could not parse the definition for '{word}'.")
+async def queue(ctx, *, music_name: str):
+    """Adds a song to the queue and plays if nothing is playing."""
+    if ctx.author.voice and ctx.author.voice.channel:
+        channel = ctx.author.voice.channel
+        if ctx.voice_client is None:
+            vc = await channel.connect()
+        else:
+            vc = ctx.voice_client
+    else:
+        await ctx.send("You must be in a voice channel to use this command.")
+        return
+
+    ytmusic = YTMusic()
+    results = ytmusic.search(music_name, filter="songs")
+    if not results:
+        await ctx.send("No results found for your search.")
+        return
+
+    track = results[0]
+    title = track.get("title", "Unknown")
+    artists = ", ".join([a['name'] for a in track.get("artists", [])])
+    video_id = track.get("videoId")
+    if not video_id:
+        await ctx.send("No playable link found for this track.")
+        return
+
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    queue = get_guild_queue(ctx)
+    queue.append({
+        "title": title,
+        "artists": artists,
+        "url": url
+    })
+
+    await ctx.send(f"Queued **{title}** by **{artists}**.")
+
+    # If nothing is playing, start playing
+    if not vc.is_playing() and not vc.is_paused():
+        await play_next(ctx)
 
 @bot.command()
 async def skip(ctx):
-    if ctx.voice_client.is_playing():
+    """Skips the current song and plays the next in queue."""
+    if ctx.voice_client and ctx.voice_client.is_playing():
         ctx.voice_client.stop()
         await ctx.send("⏭️ Skipped current track.")
+    else:
+        await ctx.send("Nothing is playing to skip.")
 
 @bot.command()
 async def stop(ctx):
