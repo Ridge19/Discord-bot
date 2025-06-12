@@ -147,8 +147,10 @@ async def play_next(ctx):
         info = ydl.extract_info(url, download=False)
         audio_url = info['url']
 
-    audio = discord.FFmpegPCMAudio(url, options="-vn")
-    vc.play(discord.PCMVolumeTransformer(audio, volume=0.3))
+    # audio = discord.FFmpegPCMAudio(url, options="-vn")
+    # vc.play(discord.PCMVolumeTransformer(audio, volume=0.2))
+    source = discord.FFmpegOpusAudio(audio_url, before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5')
+    vc.play(source)
 
     ffmpeg_options = {
         'options': '-vn -b:a 96k'
