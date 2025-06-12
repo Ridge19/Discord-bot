@@ -145,7 +145,7 @@ async def stop(ctx):
 @bot.command(aliases=['urmum'])
 async def yourmum(ctx):
     """Sends a random 'yo mama' joke from yomamma-api.herokuapp.com."""
-    url = "https://yomamma-api.herokuapp.com/jokes?count={count}"
+    url = "https://www.yomama-jokes.com/api/v1/jokes/random/"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status != 200:
