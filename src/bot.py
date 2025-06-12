@@ -150,9 +150,9 @@ async def play_next(ctx):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         audio_url = info['url']
-        
+
     audio = discord.FFmpegPCMAudio(url, options="-vn")
-    vc.play(discord.PCMVolumeTransformer(audio, volume=0.5))
+    vc.play(discord.PCMVolumeTransformer(audio, volume=0.3))
 
     ffmpeg_options = {
         'options': '-vn -b:a 96k'
