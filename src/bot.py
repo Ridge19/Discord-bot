@@ -222,6 +222,14 @@ async def feedback(ctx, *, feedback: str = None):
     feedback_channel = bot.get_channel(1382393617364287638)
     if feedback_channel:
         await feedback_channel.send(f"Feedback from {ctx.author} ({ctx.author.id}): {feedback}")
+        # Send feedback as a DM to the developer (replace with your user ID)
+    developer_id = 325912667543961600
+    developer = await bot.fetch_user(developer_id)
+    if developer:
+        try:
+            await developer.send(f"Feedback from {ctx.author} ({ctx.author.id}): {feedback}")
+        except Exception as e:
+            await ctx.send("Could not send feedback to the developer via DM.")
 
 @bot.command()
 async def patchnote(ctx):
