@@ -101,11 +101,6 @@ async def play(ctx, *, music_name: str):
         'default_search': 'ytsearch',
         'extract_flat': 'in_playlist',
         'outtmpl': 'downloads/%(id)s.%(ext)s',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'opus',
-            'preferredquality': '96',
-        }],
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
