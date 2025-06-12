@@ -104,19 +104,20 @@ async def play(ctx, *, music_name: str):
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'opus',
-            'preferredquality': '192',
+            'preferredquality': '96',
         }],
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         audio_url = info['url']
 
-    # Set FFmpeg options for higher bitrate
+    # Set FFmpeg options for 48kHz PCM audio
     ffmpeg_options = {
-    'options': '-vn -b:a 96k -ar 48000 -ac 2'
+        'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+        'options': '-vn -ar 48000 -ac 2 -f s16le'
     }
 
-    # Play the audio in the voice channel
+    # Play the audio in the voice channel as 48kHz PCM
     vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
 
 # Music queue dictionary: {guild_id: [track_dict, ...]}
