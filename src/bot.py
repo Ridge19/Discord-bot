@@ -95,7 +95,7 @@ async def play(ctx, *, music_name: str):
 
     # Use yt_dlp to get the best audio stream
     ydl_opts = {
-        'format': 'bestaudio[abr>=128]/bestaudio/best',
+        'format': 'bestaudio[abr>=96]/bestaudio/best',
         'quiet': True,
         'extract_flat': False,
         'noplaylist': True,
@@ -108,7 +108,7 @@ async def play(ctx, *, music_name: str):
 
     # Set FFmpeg options for higher bitrate
     ffmpeg_options = {
-    'options': '-vn -b:a 128k -ar 48000 -ac 2'
+    'options': '-vn -b:a 96k -ar 48000 -ac 2'
     }
 
     # Play the audio in the voice channel
@@ -135,7 +135,7 @@ async def play_next(ctx):
     await ctx.send(f"Now playing **{title}** by **{artists}**\n{url}")
 
     ydl_opts = {
-        'format': 'bestaudio[abr>=128]/bestaudio/best',
+        'format': 'bestaudio[abr>=96]/bestaudio/best',
         'quiet': True,
         'extract_flat': False,
         'noplaylist': True,
@@ -147,7 +147,7 @@ async def play_next(ctx):
         audio_url = info['url']
 
     ffmpeg_options = {
-        'options': '-vn -b:a 128k'
+        'options': '-vn -b:a 96k'
     }
 
     vc = ctx.voice_client
