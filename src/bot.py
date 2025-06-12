@@ -93,9 +93,9 @@ async def play(ctx, *, music_name: str):
     if vc.is_playing():
         vc.stop()
 
-    # Use yt_dlp to get the audio stream
+    # Use yt_dlp to get the best audio stream
     ydl_opts = {
-        'format': 'bestaudio/best',
+        'format': 'bestaudio[abr>=192]/bestaudio/best',
         'quiet': True,
         'extract_flat': False,
         'noplaylist': True,
@@ -106,8 +106,13 @@ async def play(ctx, *, music_name: str):
         info = ydl.extract_info(url, download=False)
         audio_url = info['url']
 
+    # Set FFmpeg options for higher bitrate
+    ffmpeg_options = {
+        'options': '-vn -b:a 192k'  # 192 kbps audio bitrate
+    }
+
     # Play the audio in the voice channel
-    vc.play(discord.FFmpegPCMAudio(audio_url))
+    vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
 
 @bot.command()
 async def define(ctx, *, word: str):
