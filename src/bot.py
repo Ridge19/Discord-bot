@@ -179,7 +179,7 @@ async def joke(ctx):
 async def ping(ctx):
     """Returns the bot's latency."""
     latency = round(bot.latency * 1000)
-
+    await ctx.send(f"🏓 Pong! Latency: {latency} ms")
 
 @bot.command()
 async def stats(ctx):
