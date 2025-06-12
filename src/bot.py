@@ -95,12 +95,17 @@ async def play(ctx, *, music_name: str):
 
     # Use yt_dlp to get the best audio stream
     ydl_opts = {
-        'format': 'bestaudio[abr>=96]/bestaudio/best',
-        'quiet': True,
-        'extract_flat': False,
+        'format': 'bestaudio/best',
         'noplaylist': True,
-        'default_search': 'auto',
-        'source_address': '0.0.0.0',
+        'quiet': True,
+        'default_search': 'ytsearch',
+        'extract_flat': 'in_playlist',
+        'outtmpl': 'downloads/%(id)s.%(ext)s',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'opus',
+            'preferredquality': '192',
+        }],
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
@@ -145,6 +150,9 @@ async def play_next(ctx):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         audio_url = info['url']
+        
+    audio = discord.FFmpegPCMAudio(url, options="-vn")
+    vc.play(discord.PCMVolumeTransformer(audio, volume=0.5))
 
     ffmpeg_options = {
         'options': '-vn -b:a 96k'
