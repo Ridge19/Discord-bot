@@ -433,6 +433,36 @@ async def patchnote(ctx):
             else:
                 await ctx.send("No commits found.")
 
+@bot.command()
+async def ask(ctx, *, question: str = None):
+    """Ask an AI/ML model any question using aimlapi.com."""
+    if not question:
+        await ctx.send("Please provide a question. Usage: `!ask <your question>`")
+        return
+
+    api_key = os.getenv("AIMLAPI_KEY")  # Make sure to add AIMLAPI_KEY=881ab2cdcd064a08ac2c8cbabd1a7cea to your .env
+    if not api_key:
+        await ctx.send("AI API key not found. Please contact the bot owner.")
+        return
+
+    url = "https://aimlapi.com/api/v1/predict"
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": api_key
+    }
+    payload = {
+        "question": question
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=payload, headers=headers) as resp:
+            if resp.status != 200:
+                await ctx.send("Sorry, I couldn't get an answer from the AI right now.")
+                return
+            data = await resp.json()
+            answer = data.get("answer") or data.get("response") or "No answer found."
+            await ctx.send(f"**Q:** {question}\n**A:** {answer}")
+            
 # Run the bot with the token
 if __name__ == '__main__':
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
