@@ -112,7 +112,6 @@ async def play(ctx, *, music_name: str):
     # Set FFmpeg options for 48kHz PCM audio
     ffmpeg_options = {
         'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-        # 'options': '-vn -ar 48000 -ac 2 -f s16le'
         'options': '-vn -ar 48000 -ac 2 -f s16le -af "dynaudnorm=f=200:g=15"'
     }
 
