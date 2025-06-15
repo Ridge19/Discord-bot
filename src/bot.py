@@ -49,12 +49,110 @@ class DiscordBot(commands.Bot):
     def get_guild_queue(self, ctx):
         return self.music_queues.setdefault(ctx.guild.id, [])
 
+<<<<<<< HEAD
     @commands.command()
     async def creator(self, ctx):
         creator_id = 325912667543961600
         creator_user = await self.fetch_user(creator_id)
         if creator_user:
             message = f'Created by: {creator_user.name}'
+=======
+    track = results[0]
+    title = track.get("title", "Unknown")
+    artists = ", ".join([a['name'] for a in track.get("artists", [])])
+    video_id = track.get("videoId")
+    if not video_id:
+        await ctx.send("No playable link found for this track.")
+        return
+
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    await ctx.send(f"Playing **{title}** by **{artists}**\n{url}")
+
+    # Stop any current audio
+    if vc.is_playing():
+        vc.stop()
+
+    # Use yt_dlp to get the best audio stream
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'noplaylist': True,
+        'quiet': True,
+        'default_search': 'ytsearch',
+        'extract_flat': 'in_playlist',
+        'outtmpl': 'downloads/%(id)s.%(ext)s',
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        audio_url = info['url']
+
+    # Set FFmpeg options for 48kHz PCM audio
+    ffmpeg_options = {
+        'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+        'options': '-vn -ar 48000 -ac 2 -f s16le'
+    }
+
+    # Play the audio in the voice channel as 48kHz PCM
+    vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
+
+# Music queue dictionary: {guild_id: [track_dict, ...]}
+music_queues = {}
+
+def get_guild_queue(ctx):
+    return music_queues.setdefault(ctx.guild.id, [])
+
+async def play_next(ctx):
+    queue = get_guild_queue(ctx)
+    if not queue:
+        await ctx.send("Queue is empty. Leaving the voice channel.")
+        await ctx.voice_client.disconnect()
+        return
+
+    track = queue.pop(0)
+    title = track.get("title", "Unknown")
+    artists = track.get("artists", "Unknown")
+    url = track.get("url")
+
+    await ctx.send(f"Now playing **{title}** by **{artists}**\n{url}")
+
+    ydl_opts = {
+        'format': 'bestaudio[abr>=96]/bestaudio/best',
+        'quiet': True,
+        'extract_flat': False,
+        'noplaylist': True,
+        'default_search': 'auto',
+        'source_address': '0.0.0.0',
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        audio_url = info['url']
+
+    # audio = discord.FFmpegPCMAudio(url, options="-vn")
+    # vc.play(discord.PCMVolumeTransformer(audio, volume=0.2))
+    source = discord.FFmpegOpusAudio(audio_url, before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5')
+    vc.play(source)
+
+    ffmpeg_options = {
+        'options': '-vn -b:a 96k'
+    }
+
+    vc = ctx.voice_client
+    def after_playing(error):
+        fut = discord.utils.run_coroutine_threadsafe(play_next(ctx), bot.loop)
+        try:
+            fut.result()
+        except Exception as e:
+            print(f"Error in after_playing: {e}")
+
+    vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), after=after_playing)
+
+@bot.command()
+async def queue(ctx, *, music_name: str):
+    """Adds a song to the queue and plays if nothing is playing."""
+    if ctx.author.voice and ctx.author.voice.channel:
+        channel = ctx.author.voice.channel
+        if ctx.voice_client is None:
+            vc = await channel.connect()
+>>>>>>> parent of 8a6ae35 (- added normalisation of audio)
         else:
             message = 'Creator not found.'
         await ctx.send(message)
