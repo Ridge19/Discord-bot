@@ -56,6 +56,9 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.CommandNotFound):
         await ctx.send("Command not found.")
         return
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Missing required argument. Please check the command usage.")
+        return
     else:
         await ctx.send(f"An error occurred: {error}")
 
@@ -115,6 +118,15 @@ async def play(ctx, *, music_name: str):
 
     # Play the audio in the voice channel as 48kHz PCM
     vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
+
+
+async def pause(ctx):
+    """Pauses the currently playing audio."""
+    if ctx.voice_client and ctx.voice_client.is_playing():
+        ctx.voice_client.pause()
+        await ctx.send("⏸️ Paused the current track.")
+    else:
+        await ctx.send("Nothing is playing to pause.")
 
 # Music queue dictionary: {guild_id: [track_dict, ...]}
 music_queues = {}
