@@ -179,6 +179,40 @@ async def play_next(ctx):
     vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), after=after_playing)
 
 @bot.command()
+async def define(ctx, *, word: str = None):
+    """Looks up the definition of a word using dictionaryapi.dev."""
+    if not word:
+        await ctx.send("Please provide a word to define. Usage: `!define <word>`")
+        return
+
+    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                await ctx.send(f"Could not find a definition for '{word}'.")
+                return
+            data = await resp.json()
+            try:
+                entry = data[0]
+                word_text = entry.get("word", word)
+                phonetic = entry.get("phonetic", "")
+                meanings = entry.get("meanings", [])
+                if not meanings:
+                    await ctx.send(f"No definitions found for '{word_text}'.")
+                    return
+                # Get the first definition
+                part_of_speech = meanings[0].get("partOfSpeech", "")
+                definitions = meanings[0].get("definitions", [])
+                definition = definitions[0].get("definition", "No definition found.") if definitions else "No definition found."
+                example = definitions[0].get("example", None) if definitions else None
+
+                msg = f"**{word_text}** {phonetic}\n*{part_of_speech}*\n**Definition:** {definition}"
+                if example:
+                    msg += f"\n*Example:* {example}"
+                await ctx.send(msg)
+            except Exception:
+                await ctx.send(f"Could not parse the definition for '{word}'.")
+@bot.command()
 async def queue(ctx, *, music_name: str):
     """Adds a song to the queue and plays if nothing is playing."""
     if ctx.author.voice and ctx.author.voice.channel:
