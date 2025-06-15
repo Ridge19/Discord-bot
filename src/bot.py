@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+import re
 import aiohttp
 # music
 from ytmusicapi import YTMusic
@@ -212,6 +213,49 @@ async def define(ctx, *, word: str = None):
                 await ctx.send(msg)
             except Exception:
                 await ctx.send(f"Could not parse the definition for '{word}'.")
+
+@bot.event
+async def on_message(message):
+    # Ignore messages sent by the bot itself
+    if message.author == bot.user:
+        return
+
+    # Only check messages in text channels (not DMs)
+    if isinstance(message.channel, discord.TextChannel):
+        words = re.findall(r"\b\w+\b", message.content.lower())
+        incorrect_words = []
+        corrections = {}
+
+        # Use the autocorrect API (languagetool.org public API)
+        async with aiohttp.ClientSession() as session:
+            text = message.content
+            url = "https://api.languagetool.org/v2/check"
+            params = {
+                "text": text,
+                "language": "en-US"
+            }
+            async with session.post(url, data=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    for match in data.get("matches", []):
+                        if match.get("replacements"):
+                            wrong = text[match["offset"]:match["offset"] + match["length"]]
+                            suggestion = match["replacements"][0]["value"]
+                            corrections[wrong] = suggestion
+                            incorrect_words.append(wrong)
+
+        # If any incorrect words found, reply to the user with suggestions
+        if corrections:
+            msg_lines = []
+            for wrong, suggestion in corrections.items():
+                msg_lines.append(f"**{wrong}** → Did you mean **{suggestion}**?")
+            await message.channel.send(
+                "Possible incorrect word(s) detected:\n" + "\n".join(msg_lines)
+            )
+
+    # Allow commands to be processed as well
+    await bot.process_commands(message)
+
 @bot.command()
 async def queue(ctx, *, music_name: str):
     """Adds a song to the queue and plays if nothing is playing."""
@@ -336,7 +380,7 @@ async def intro(ctx):
     """Sends an introduction message."""
     intro_message = (
         "Hello! I'm a Discord bot created by the developer: Ridge (@riidgyy)\n"
-        "I can find music, tell jokes, define words, get statistics and much more!\n"
+        "I can find music, tell jokes, define words, correct spelling, get statistics and much more!\n"
         "I'm still a work in progress. Feedback is welcome!\n"
         "Use `!help` to see what I can do."
     )
