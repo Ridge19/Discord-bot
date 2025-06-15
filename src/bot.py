@@ -8,6 +8,10 @@ from ytmusicapi import YTMusic
 import yt_dlp
 #github 
 import requests
+import json
+from pathlib import Path
+
+import difflib
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -17,6 +21,20 @@ intents.message_content = True  # Enable message content intent
 
 # Initialize the bot with a command prefix
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+# track most used commands
+STATS_FILE = Path("command_stats.json")
+
+def track_command_usage(command_name: str):
+    """Increments the usage count for the given command name."""
+    if STATS_FILE.exists():
+        with open(STATS_FILE, "r") as f:
+            stats = json.load(f)
+    else:
+        stats = {}
+    stats[command_name] = stats.get(command_name, 0) + 1
+    with open(STATS_FILE, "w") as f:
+        json.dump(stats, f, indent=2)
 
 # Event listener for when the bot has successfully connected to Discord
 @bot.event
@@ -214,48 +232,6 @@ async def define(ctx, *, word: str = None):
             except Exception:
                 await ctx.send(f"Could not parse the definition for '{word}'.")
 
-@bot.event
-async def on_message(message):
-    # Ignore messages sent by the bot itself
-    if message.author == bot.user:
-        return
-
-    # Only check messages in text channels (not DMs)
-    if isinstance(message.channel, discord.TextChannel):
-        words = re.findall(r"\b\w+\b", message.content.lower())
-        incorrect_words = []
-        corrections = {}
-
-        # Use the autocorrect API (languagetool.org public API)
-        async with aiohttp.ClientSession() as session:
-            text = message.content
-            url = "https://api.languagetool.org/v2/check"
-            params = {
-                "text": text,
-                "language": "en-US"
-            }
-            async with session.post(url, data=params) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    for match in data.get("matches", []):
-                        if match.get("replacements"):
-                            wrong = text[match["offset"]:match["offset"] + match["length"]]
-                            suggestion = match["replacements"][0]["value"]
-                            corrections[wrong] = suggestion
-                            incorrect_words.append(wrong)
-
-        # If any incorrect words found, reply to the user with suggestions
-        if corrections:
-            msg_lines = []
-            for wrong, suggestion in corrections.items():
-                msg_lines.append(f"**{wrong}** → Did you mean **{suggestion}**?")
-            await message.channel.send(
-                "Possible incorrect word(s) detected:\n" + "\n".join(msg_lines)
-            )
-
-    # Allow commands to be processed as well
-    await bot.process_commands(message)
-
 @bot.command()
 async def queue(ctx, *, music_name: str):
     """Adds a song to the queue and plays if nothing is playing."""
@@ -433,35 +409,48 @@ async def patchnote(ctx):
             else:
                 await ctx.send("No commits found.")
 
+@bot.event
+async def on_command(ctx):
+    track_command_usage(ctx.command.name)
+
 @bot.command()
-async def ask(ctx, *, question: str = None):
-    """Ask an AI/ML model any question using aimlapi.com."""
-    if not question:
-        await ctx.send("Please provide a question. Usage: `!ask <your question>`")
+async def popular(ctx, top: int = 3):
+    """Shows the most commonly used commands."""
+    if STATS_FILE.exists():
+        with open(STATS_FILE, "r") as f:
+            stats = json.load(f)
+    else:
+        await ctx.send("No command usage data yet.")
         return
 
-    api_key = os.getenv("AIMLAPI_KEY")  # Make sure to add AIMLAPI_KEY=881ab2cdcd064a08ac2c8cbabd1a7cea to your .env
-    if not api_key:
-        await ctx.send("AI API key not found. Please contact the bot owner.")
+    sorted_stats = sorted(stats.items(), key=lambda x: x[1], reverse=True)
+    message = "**Most Used Commands:**\n"
+    for i, (cmd, count) in enumerate(sorted_stats[:top], 1):
+        message += f"{i}. `{cmd}` used {count} times\n"
+
+    await ctx.send(message)
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You do not have permission to use this command.")
         return
+    elif isinstance(error, commands.CommandNotFound):
+        # Smart suggestion using difflib
+        cmd_input = ctx.message.content.lstrip('!').split()[0]
+        known_commands = [cmd.name for cmd in bot.commands]
+        suggestion = difflib.get_close_matches(cmd_input, known_commands, n=1, cutoff=0.6)
 
-    url = "https://aimlapi.com/api/v1/predict"
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": api_key
-    }
-    payload = {
-        "question": question
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=payload, headers=headers) as resp:
-            if resp.status != 200:
-                await ctx.send("Sorry, I couldn't get an answer from the AI right now.")
-                return
-            data = await resp.json()
-            answer = data.get("answer") or data.get("response") or "No answer found."
-            await ctx.send(f"**Q:** {question}\n**A:** {answer}")
+        if suggestion:
+            await ctx.send(f"❓ Command `{cmd_input}` not found. Did you mean `!{suggestion[0]}`?")
+        else:
+            await ctx.send("Command not found. Use `!help` to see available commands.")
+        return
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Missing required argument. Please check the command usage.")
+        return
+    else:
+        await ctx.send(f"An error occurred: {error}")
             
 # Run the bot with the token
 if __name__ == '__main__':
