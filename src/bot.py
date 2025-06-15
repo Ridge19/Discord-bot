@@ -5,9 +5,7 @@ import aiohttp
 from ytmusicapi import YTMusic
 import yt_dlp
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
 
 class DiscordBot(commands.Bot):
     def __init__(self, *args, **kwargs):
@@ -322,7 +320,3 @@ class DiscordBot(commands.Bot):
                     )
                 else:
                     await ctx.send("No commits found.")
-
-# Run the bot with the token
-if __name__ == '__main__':
-    DiscordBot().run(os.getenv("DISCORD_BOT_TOKEN"))
