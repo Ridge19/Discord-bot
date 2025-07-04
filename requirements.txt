@@ -4,3 +4,4 @@ ytmusicapi
 pynacl
 yt-dlp
 aiohttp
+requests
