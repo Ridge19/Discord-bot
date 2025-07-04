@@ -26,7 +26,7 @@ intents.message_content = True  # Enable message content intent
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # track most used commands
-STATS_FILE = Path("command_stats.json")
+STATS_FILE = Path("logs/command_stats/command_stats.json")
 
 def track_command_usage(command_name: str):
     """Increments the usage count for the given command name."""
@@ -489,8 +489,11 @@ async def log(ctx, days: int = 7):
         await ctx.send("No messages found in the specified time range.")
         return
     
-    # Save messages to a file
-    filename = f"chatlog_{ctx.channel.id}_{since.strftime('%Y%m%d')}_to_{datetime.datetime.utcnow().strftime('%Y%m%d')}.txt"
+    # Save messages to a file in logs directory
+    logs_dir = "logs"
+    os.makedirs(logs_dir, exist_ok=True)
+
+    filename = f"{logs_dir}/chatlog_{ctx.channel.id}_{since.strftime('%Y%m%d')}_to_{datetime.datetime.utcnow().strftime('%Y%m%d')}.txt"
     with open(filename, "w", encoding="utf-8") as f:
         f.write("\n".join(messages))
 
