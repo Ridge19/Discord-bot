@@ -6,10 +6,13 @@ import aiohttp
 # music
 from ytmusicapi import YTMusic
 import yt_dlp
-#github 
+# github 
 import requests
 import json
 from pathlib import Path
+
+# chat logging
+import datetime
 
 import difflib
 
@@ -451,6 +454,47 @@ async def on_command_error(ctx, error):
         return
     else:
         await ctx.send(f"An error occurred: {error}")
+
+@bot.command()
+async def quote(ctx, *, text: str = None):
+    """Quotes the previous message sent by a user in the chat if no text is provided."""
+    if text:
+        await ctx.send(f"> {text}\n— {ctx.author.mention}")
+        return
+
+    # Fetch the previous message in the channel (excluding the command message itself)
+    messages = await ctx.channel.history(limit=2).flatten()
+    if len(messages) < 2:
+        await ctx.send("No previous message found to quote.")
+        return
+
+    prev_msg = messages[1]
+    await ctx.send(f"> {prev_msg.content}\n— {prev_msg.author.mention}")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def log(ctx, days: int = 7):
+    """Logs messages from the last N days in the current channel to a txt file."""
+    since = datetime.datetime.now() - datetime.timedelta(days=days)
+    messages = []
+
+    async for msg in ctx.channel.history(limit=None, after=since):
+        # Format: [YYYY-MM-DD HH:MM] username: message
+        timestamp = msg.created_at.strftime("%Y-%m-%d %H:%M")
+        messages.append(f"[{timestamp}] {msg.author.name}: {msg.content}")
+
+    if not messages:
+        await ctx.send("No messages found in the specified time range.")
+        return
+    
+    # Save messages to a file
+    filename = f"chatlog_{ctx.channel.id}_{since.strftime('%Y%m%d')}_to_{datetime.datetime.utcnow().strftime('%Y%m%d')}.txt"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("\n".join(messages))
+
+    await ctx.send(f"Chat log for the past {days} days saved as `{filename}`.")
+    
+    
             
 # Run the bot with the token
 if __name__ == '__main__':
