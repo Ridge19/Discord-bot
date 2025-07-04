@@ -463,11 +463,13 @@ async def quote(ctx, *, text: str = None):
         return
 
     # Fetch the previous message in the channel (excluding the command message itself)
-    messages = await ctx.channel.history(limit=2).flatten()
+    messages = []
+    async for msg in ctx.channel.history(limit=2):
+        messages.append(msg)
     if len(messages) < 2:
         await ctx.send("No previous message found to quote.")
         return
-
+    
     prev_msg = messages[1]
     await ctx.send(f"> {prev_msg.content}\n— {prev_msg.author.mention}")
 
