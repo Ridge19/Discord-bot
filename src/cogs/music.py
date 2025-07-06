@@ -161,18 +161,18 @@ class Music(commands.Cog):
         vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), after=after_playing)
 
     @commands.command()
-    async def skip(ctx):
+    async def skip(self, ctx):
         """Skips the current song and plays the next in queue."""
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.stop()
             await ctx.send("⏭️ Skipped current track.")
             # Play the next song in the queue, if any
-            await play_next(ctx)
+            await self.play_next(ctx)
         else:
             await ctx.send("Nothing is playing to skip.")
 
     @commands.command()
-    async def stop(ctx):
+    async def stop(self, ctx):
         """Stops the music and makes the bot leave the voice channel."""
         if ctx.voice_client:
             await ctx.voice_client.disconnect()
