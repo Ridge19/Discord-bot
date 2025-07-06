@@ -57,6 +57,15 @@ class Utility(commands.Cog):
         prev_msg = messages[1]
         await ctx.send(f"> {prev_msg.content}\n— {prev_msg.author.mention}")
 
+    @commands.command()
+    async def restart(self, ctx):
+        """Restarts the bot (Pterodactyl will auto-restart it)."""
+        if ctx.author.id != 325912667543961600:
+            await ctx.send("You do not have permission to restart the bot.")
+            return
+        await ctx.send("Restarting the bot...")
+        await self.bot.close()  # This will exit the process, Pterodactyl will restart it
+
 class CustomHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         embed = discord.Embed(
