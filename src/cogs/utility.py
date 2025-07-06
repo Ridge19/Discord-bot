@@ -74,5 +74,5 @@ class CustomHelp(commands.HelpCommand):
         await channel.send(embed=embed)
 
 async def setup(bot):
-    await bot.add_cog(Utility(bot))
     bot.help_command = CustomHelp()
+    await bot.add_cog(Utility(bot))

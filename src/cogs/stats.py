@@ -25,5 +25,18 @@ class Stats(commands.Cog):
 
         await ctx.send(message)
 
+    @commands.command()
+    async def stats(self, ctx):
+        """Shows the bot statistics."""
+        latency = round(self.bot.latency * 1000)
+        guild_count = len(self.bot.guilds)
+        user_count = sum(guild.member_count for guild in self.bot.guilds)
+        message = (
+            f"**Bot Statistics:**\n"
+            f"Latency: {latency} ms\n"
+            f"Guilds: {guild_count}\n"
+            f"Users: {user_count}\n"
+        )
+
 async def setup(bot):
     await bot.add_cog(Stats(bot))
