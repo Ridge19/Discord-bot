@@ -55,7 +55,7 @@ class Utility(commands.Cog):
             return
 
         prev_msg = messages[1]
-        await ctx.send(f"> {prev_msg.content}\n— {prev_msg.author.mention}")
+        await ctx.send(f"> {prev_msg.content}\n— {prev_msg.author.mention}, {prev_msg.created_at.strftime('%Y-%m-%d %H:%M:%S')} UTC")
 
     @commands.command()
     async def restart(self, ctx):
@@ -65,6 +65,19 @@ class Utility(commands.Cog):
             return
         await ctx.send("Restarting the bot...")
         await self.bot.close()  # This will exit the process, Pterodactyl will restart it
+    
+    @commands.command()
+    async def user(self, ctx, member: discord.Member = None):
+        """Displays user info."""
+        member = member or ctx.author
+        embed = discord.Embed(title=f"{member}", color=member.color)
+        embed.set_thumbnail(url=member.avatar.url)
+        embed.add_field(name="Mention", value=member.mention)
+        embed.add_field(name="ID", value=member.id)
+        embed.add_field(name="Joined", value=member.joined_at.strftime("%Y-%m-%d %H:%M:%S"))
+        embed.add_field(name="Created", value=member.created_at.strftime("%Y-%m-%d %H:%M:%S"))
+        embed.add_field(name="Top Role", value=member.top_role.name)
+        await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))
