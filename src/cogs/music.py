@@ -162,7 +162,7 @@ class Music(commands.Cog):
         else:
             await ctx.send("I'm not in a voice channel.")
 
-    @commands.command(name="showqueue", aliases=["queueview", "queue", "q"])
+    @commands.command(name="showqueue", aliases=["queueview", "q"])
     async def showqueue(self, ctx):
         """Shows the current music queue."""
         queue = get_guild_queue(ctx)
