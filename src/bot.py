@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 from dotenv import load_dotenv
+import asyncio
 
 load_dotenv()
 
@@ -31,5 +32,4 @@ async def main():
     await bot.start(os.getenv("DISCORD_BOT_TOKEN"))
 
 if __name__ == '__main__':
-    import asyncio
     asyncio.run(main())

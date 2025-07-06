@@ -14,7 +14,7 @@ class Music(commands.Cog):
 
     # play song 
     @commands.command()
-    async def play(ctx, *, music_name: str):
+    async def play(self, ctx, *, music_name: str):
         """Searches YouTube Music and plays the first result's audio in your voice channel."""
         if ctx.author.voice and ctx.author.voice.channel:
             channel = ctx.author.voice.channel
@@ -41,36 +41,18 @@ class Music(commands.Cog):
             return
 
         url = f"https://www.youtube.com/watch?v={video_id}"
+        queue = get_guild_queue(ctx)
+        queue.clear()  # Clear the queue for direct play
+        queue.append({
+            "title": title,
+            "artists": artists,
+            "url": url
+        })
         await ctx.send(f"Playing **{title}** by **{artists}**\n{url}")
-
-        # Stop any current audio
-        if vc.is_playing():
-            vc.stop()
-
-        # Use yt_dlp to get the best audio stream
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'noplaylist': True,
-            'quiet': True,
-            'default_search': 'ytsearch',
-            'extract_flat': 'in_playlist',
-            'outtmpl': 'downloads/%(id)s.%(ext)s',
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            audio_url = info['url']
-
-        # Set FFmpeg options for 48kHz PCM audio
-        ffmpeg_options = {
-            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-            'options': '-vn -ar 48000 -ac 2 -f s16le -af "dynaudnorm=f=200:g=15"'
-        }
-
-        # Play the audio in the voice channel as 48kHz PCM
-        vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
+        await self.play_next(ctx)
 
     @commands.command()
-    async def pause(ctx):
+    async def pause(self, ctx):
         """Pauses the currently playing audio."""
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.pause()
@@ -116,7 +98,7 @@ class Music(commands.Cog):
         await ctx.send(f"Queued **{title}** by **{artists}**.")
 
         # If nothing is playing, start playing the next song in the queue
-        if not vc.is_playing() and not vc.is_paused():
+        if not ctx.voice_client.is_playing() and not ctx.voice_client.is_paused() and len(queue) == 1:
             await self.play_next(ctx)
 
     async def play_next(self, ctx):
@@ -179,6 +161,21 @@ class Music(commands.Cog):
             await ctx.send("Stopped music and left the voice channel.")
         else:
             await ctx.send("I'm not in a voice channel.")
+
+    @commands.command(name="showqueue", aliases=["queueview", "queue", "q"])
+    async def showqueue(self, ctx):
+        """Shows the current music queue."""
+        queue = get_guild_queue(ctx)
+        if not queue:
+            await ctx.send("The queue is currently empty.")
+            return
+
+        msg = "**Current Queue:**\n"
+        for i, track in enumerate(queue, 1):
+            title = track.get("title", "Unknown")
+            artists = track.get("artists", "Unknown")
+            msg += f"{i}. **{title}** by **{artists}**\n"
+        await ctx.send(msg)
 
 
 async def setup(bot):
