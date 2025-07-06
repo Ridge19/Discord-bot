@@ -8,6 +8,7 @@ class Fun(commands.Cog):
 
     @commands.command(aliases=['urmum'])
     async def yourmum(self, ctx):
+        """gets a random 'yo mama' joke from yomama-jokes.com API."""
         url = "https://www.yomama-jokes.com/api/v1/jokes/random/"
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
@@ -20,6 +21,7 @@ class Fun(commands.Cog):
 
     @commands.command()
     async def joke(self, ctx):
+        """gets a random joke from jokeapi.dev API."""
         url = "https://v2.jokeapi.dev/joke/Any"
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:

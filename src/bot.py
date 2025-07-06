@@ -21,7 +21,8 @@ initial_extensions = [
     'cogs.music',
     'cogs.fun',
     'cogs.utility',
-    'cogs.stats'
+    'cogs.stats',
+    'cogs.help'
 ]
 
 async def main():
