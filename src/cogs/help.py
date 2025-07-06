@@ -3,7 +3,7 @@ from discord.ext import commands
 import aiohttp
 
 class CustomHelp(commands.HelpCommand):
-    async def send_bot_help(self, mapping):
+    async def help(self, mapping):
         embed = discord.Embed(
             title="Bot Commands",
             description="Here are all my commands. Use `!help <command>` for more info.",
