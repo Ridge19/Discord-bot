@@ -128,7 +128,7 @@ class Music(commands.Cog):
 
     # skip the next song in the queue
     @commands.command()
-    async def skip(self, ctx):
+    async def play(self, ctx):
         queue = get_guild_queue(ctx)
         if not queue:
             await ctx.send("Queue is empty. Leaving the voice channel.")
