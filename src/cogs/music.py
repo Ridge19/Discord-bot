@@ -14,7 +14,7 @@ class Music(commands.Cog):
 
     # play song 
     @commands.command()
-    async def play(self, ctx, *, music_name: str):
+    async def play(ctx, *, music_name: str):
         """Searches YouTube Music and plays the first result's audio in your voice channel."""
         if ctx.author.voice and ctx.author.voice.channel:
             channel = ctx.author.voice.channel
@@ -43,9 +43,11 @@ class Music(commands.Cog):
         url = f"https://www.youtube.com/watch?v={video_id}"
         await ctx.send(f"Playing **{title}** by **{artists}**\n{url}")
 
+        # Stop any current audio
         if vc.is_playing():
             vc.stop()
 
+        # Use yt_dlp to get the best audio stream
         ydl_opts = {
             'format': 'bestaudio/best',
             'noplaylist': True,
@@ -58,33 +60,24 @@ class Music(commands.Cog):
             info = ydl.extract_info(url, download=False)
             audio_url = info['url']
 
+        # Set FFmpeg options for 48kHz PCM audio
         ffmpeg_options = {
             'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
             'options': '-vn -ar 48000 -ac 2 -f s16le -af "dynaudnorm=f=200:g=15"'
         }
+
+        # Play the audio in the voice channel as 48kHz PCM
         vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
 
-    # skip current song 
     @commands.command()
-    async def skip(self, ctx):
-        """Skips the currently playing track."""
+    async def pause(ctx):
+        """Pauses the currently playing audio."""
         if ctx.voice_client and ctx.voice_client.is_playing():
-            ctx.voice_client.stop()
-            await ctx.send("⏭️ Skipped the current track.")
+            ctx.voice_client.pause()
+            await ctx.send("⏸️ Paused the current track.")
         else:
-            await ctx.send("Nothing is playing to skip.")
+            await ctx.send("Nothing is playing to pause.")
 
-    # stop current song and disconnect from voice channel
-    @commands.command()
-    async def stop(self, ctx):
-        """Stops the music and disconnects from the voice channel."""
-        if ctx.voice_client:
-            await ctx.voice_client.disconnect()
-            await ctx.send("Stopped music and left the voice channel.")
-        else:
-            await ctx.send("I'm not in a voice channel.")
-
-    # add song to queue and play if nothing is playing
     @commands.command()
     async def queue(self, ctx, *, music_name: str):
         """Adds a song to the queue and plays it if nothing is playing."""
@@ -126,9 +119,7 @@ class Music(commands.Cog):
         if not vc.is_playing() and not vc.is_paused():
             await self.play_next(ctx)
 
-    # skip the next song in the queue
-    @commands.command()
-    async def play(self, ctx):
+    async def play_next(self, ctx):
         queue = get_guild_queue(ctx)
         if not queue:
             await ctx.send("Queue is empty. Leaving the voice channel.")
@@ -168,6 +159,27 @@ class Music(commands.Cog):
                 print(f"Error in after_playing: {e}")
 
         vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), after=after_playing)
+
+    @commands.command()
+    async def skip(ctx):
+        """Skips the current song and plays the next in queue."""
+        if ctx.voice_client and ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+            await ctx.send("⏭️ Skipped current track.")
+            # Play the next song in the queue, if any
+            await play_next(ctx)
+        else:
+            await ctx.send("Nothing is playing to skip.")
+
+    @commands.command()
+    async def stop(ctx):
+        """Stops the music and makes the bot leave the voice channel."""
+        if ctx.voice_client:
+            await ctx.voice_client.disconnect()
+            await ctx.send("Stopped music and left the voice channel.")
+        else:
+            await ctx.send("I'm not in a voice channel.")
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
