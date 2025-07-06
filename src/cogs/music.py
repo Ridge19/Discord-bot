@@ -12,6 +12,7 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # play song 
     @commands.command()
     async def play(self, ctx, *, music_name: str):
         """Searches YouTube Music and plays the first result's audio in your voice channel."""
@@ -63,6 +64,7 @@ class Music(commands.Cog):
         }
         vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
 
+    # skip current song 
     @commands.command()
     async def skip(self, ctx):
         """Skips the currently playing track."""
@@ -72,6 +74,7 @@ class Music(commands.Cog):
         else:
             await ctx.send("Nothing is playing to skip.")
 
+    # stop current song and disconnect from voice channel
     @commands.command()
     async def stop(self, ctx):
         """Stops the music and disconnects from the voice channel."""
@@ -81,6 +84,7 @@ class Music(commands.Cog):
         else:
             await ctx.send("I'm not in a voice channel.")
 
+    # add song to queue and play if nothing is playing
     @commands.command()
     async def queue(self, ctx, *, music_name: str):
         """Adds a song to the queue and plays it if nothing is playing."""
@@ -122,6 +126,8 @@ class Music(commands.Cog):
         if not vc.is_playing() and not vc.is_paused():
             await self.play_next(ctx)
 
+    # skip the next song in the queue
+    @commands.command()
     async def play_next(self, ctx):
         queue = get_guild_queue(ctx)
         if not queue:
