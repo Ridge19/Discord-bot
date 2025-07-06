@@ -67,5 +67,4 @@ class Utility(commands.Cog):
         await self.bot.close()  # This will exit the process, Pterodactyl will restart it
 
 async def setup(bot):
-    bot.help_command = CustomHelp()
     await bot.add_cog(Utility(bot))
