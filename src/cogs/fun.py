@@ -41,7 +41,7 @@ class Fun(commands.Cog):
     @commands.command()
     async def rps(self, ctx, choice: str = None):
         """Play Rock, Paper, Scissors with the bot."""
-        valid_choices = ['Rock', 'Paper', 'Scissors']
+        valid_choices = ['rock', 'paper', 'scissors']
 
         if choice is None:
             await ctx.send("Please choose either Rock, Paper or Scissors to play.")
@@ -55,7 +55,7 @@ class Fun(commands.Cog):
         bot_choice = random.choice(valid_choices).lower()
         result = None
         if user_choice == bot_choice:
-            result = "Its a tie! bot picked {bot_choice}"
+            result = f"Its a tie! bot picked {bot_choice}"
         elif (user_choice == 'rock' and bot_choice == 'scissors') or \
                 (user_choice == 'paper' and bot_choice == 'rock') or \
                 (user_choice == 'scissors' and bot_choice == 'paper'):
@@ -64,7 +64,7 @@ class Fun(commands.Cog):
             result = f"You lose! Bot picked {bot_choice}."
 
         await ctx.send(result)
-        
+
 
 async def setup(bot):
     await bot.add_cog(Fun(bot))
