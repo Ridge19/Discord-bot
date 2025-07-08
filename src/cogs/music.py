@@ -177,6 +177,26 @@ class Music(commands.Cog):
             msg += f"{i}. **{title}** by **{artists}**\n"
         await ctx.send(msg)
 
+    @commands.command()
+    async def clearqueue(self, ctx):
+        """Clears the current music queue."""
+        queue = get_guild_queue(ctx)
+        if not queue:
+            await ctx.send("The queue is already empty.")
+            return
+
+        queue.clear()
+        await ctx.send("Cleared the music queue.")
+
+    @commands.command()
+    async def resume(self, ctx):
+        """Resumes the currently paused audio."""
+        if ctx.voice_client and ctx.voice_client.is_paused():
+            ctx.voice_client.resume()
+            await ctx.send("▶️ Resumed the current track.")
+        else:
+            await ctx.send("Nothing is paused to resume.")
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
