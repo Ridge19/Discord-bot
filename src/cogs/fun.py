@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import aiohttp
+import random 
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -36,6 +37,34 @@ class Fun(commands.Cog):
                 else:
                     joke = "No joke found."
                 await ctx.send(joke)
+
+    @commands.command()
+    async def rps(self, ctx, choice: str = None):
+        """Play Rock, Paper, Scissors with the bot."""
+        valid_choices = ['Rock', 'Paper', 'Scissors']
+
+        if choice is None:
+            await ctx.send("Please choose either Rock, Paper or Scissors to play.")
+            return
+
+        user_choice = choice.lower()
+        if user_choice not in valid_choices:
+            await ctx.send("Invalid choice! Please choose either Rock, Paper or Scissors.")
+            return
+        
+        bot_choice = random.choice(valid_choices).lower()
+        result = None
+        if user_choice == bot_choice:
+            result = "Its a tie! bot picked {bot_choice}"
+        elif (user_choice == 'rock' and bot_choice == 'scissors') or \
+                (user_choice == 'paper' and bot_choice == 'rock') or \
+                (user_choice == 'scissors' and bot_choice == 'paper'):
+            result = f"You win! Bot picked {bot_choice}."
+        else:
+            result = f"You lose! Bot picked {bot_choice}."
+
+        await ctx.send(result)
+        
 
 async def setup(bot):
     await bot.add_cog(Fun(bot))
