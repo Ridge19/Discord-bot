@@ -108,5 +108,25 @@ class Utility(commands.Cog):
                 else:
                     await ctx.send("No commits found.")
 
+    @commands.command()
+    async def feedback(self, ctx, *, feedback: str = None):
+        """Sends feedback to the developer."""
+        if not feedback:
+            await ctx.send("Please provide some feedback.")
+            return
+        await ctx.send("Feedback received! Thank you for your input.")
+        # Optionally, send feedback to a specific channel (replace CHANNEL_ID with your channel's ID)
+        feedback_channel = self.bot.get_channel(1382393617364287638)
+        if feedback_channel:
+            await feedback_channel.send(f"Feedback from {ctx.author} ({ctx.author.id}): {feedback}")
+            # Send feedback as a DM to the developer (replace with your user ID)
+        developer_id = 325912667543961600
+        developer = await self.bot.fetch_user(developer_id)
+        if developer:
+            try:
+                await developer.send(f"Feedback from {ctx.author} ({ctx.author.id}): {feedback}")
+            except Exception as e:
+                await ctx.send("Could not send feedback to the developer via DM.")
+
 async def setup(bot):
     await bot.add_cog(Utility(bot))

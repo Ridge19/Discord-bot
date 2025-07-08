@@ -197,5 +197,44 @@ class Music(commands.Cog):
             await ctx.send("Nothing is paused to resume.")
 
 
+    @commands.command()
+    async def lofi(self, ctx):
+        """Plays a 24/7 lofi radio stream in your voice channel."""
+        if ctx.author.voice and ctx.author.voice.channel:
+            channel = ctx.author.voice.channel
+            if ctx.voice_client is None:
+                vc = await channel.connect()
+            else:
+                vc = ctx.voice_client
+        else:
+            await ctx.send("You must be in a voice channel to use this command.")
+            return
+
+        # Example lofi radio stream (Lofi Girl)
+        url = "https://www.youtube.com/watch?v=jfKfPfyJRdk"
+
+        # Stop current audio if playing
+        if vc.is_playing():
+            vc.stop()
+
+        # Use yt_dlp to get the audio stream URL
+        import yt_dlp
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'quiet': True,
+            'noplaylist': True,
+            'extract_flat': False,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            audio_url = info['url']
+
+        ffmpeg_options = {
+            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            'options': '-vn'
+        }
+        vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
+        await ctx.send("🎶 Now playing **Lofi Radio**!")
+
 async def setup(bot):
     await bot.add_cog(Music(bot))
