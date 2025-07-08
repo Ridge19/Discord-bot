@@ -198,8 +198,11 @@ class Music(commands.Cog):
 
 
     @commands.command()
-    async def lofi(self, ctx):
-        """Plays a 24/7 lofi radio stream in your voice channel."""
+    async def lofi(self, ctx, *, station: str = None):
+        """Plays a 24/7 lofi radio stream in your voice channel.
+        Usage: !lofi [station]
+        Available stations: lofigirl, college, bootlegboy, chilledcow
+        """
         if ctx.author.voice and ctx.author.voice.channel:
             channel = ctx.author.voice.channel
             if ctx.voice_client is None:
@@ -210,8 +213,21 @@ class Music(commands.Cog):
             await ctx.send("You must be in a voice channel to use this command.")
             return
 
-        # Example lofi radio stream (Lofi Girl)
-        url = "https://www.youtube.com/watch?v=jfKfPfyJRdk"
+        # Define available stations
+        stations = {
+            "lofigirl": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+            "college": "https://www.youtube.com/watch?v=5qap5aO4i9A",
+            "bootlegboy": "https://www.youtube.com/watch?v=7NOSDKb0HlU",
+            "chilledcow": "https://www.youtube.com/watch?v=DWcJFNfaw9c"
+        }
+
+        # Default to 'lofigirl' if no station is provided or invalid
+        key = (station or "lofigirl").lower()
+        url = stations.get(key)
+        if not url:
+            station_list = ", ".join(stations.keys())
+            await ctx.send(f"Unknown station. Available stations: {station_list}")
+            return
 
         # Stop current audio if playing
         if vc.is_playing():
@@ -234,7 +250,7 @@ class Music(commands.Cog):
             'options': '-vn'
         }
         vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
-        await ctx.send("🎶 Now playing **Lofi Radio**!")
+        await ctx.send(f"🎶 Now playing **{key.title()}** lofi radio!")
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
