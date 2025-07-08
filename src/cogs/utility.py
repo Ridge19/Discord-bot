@@ -78,9 +78,10 @@ class Utility(commands.Cog):
         embed.add_field(name="Joined", value=member.joined_at.strftime("%Y-%m-%d %H:%M:%S"))
         embed.add_field(name="Created", value=member.created_at.strftime("%Y-%m-%d %H:%M:%S"))
         embed.add_field(name="Top Role", value=member.top_role.name)
+        embed.add_field(name="Status", value=str(member.status).title())
         await ctx.send(embed=embed)
 
-    @commands.command()
+    # detect and correct common command errors
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You do not have permission to use this command.")
@@ -101,6 +102,10 @@ class Utility(commands.Cog):
             return
         else:
             await ctx.send(f"An error occurred: {error}")
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        await self.on_command_error(ctx, error)
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))
