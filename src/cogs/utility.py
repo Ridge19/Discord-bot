@@ -81,5 +81,32 @@ class Utility(commands.Cog):
         embed.add_field(name="Status", value=str(member.status).title())
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def patchnote(self, ctx):
+        """Fetches the latest commit message from the GitHub repository."""
+        owner = "Ridge19"
+        repo = "Discord-bot"
+        url = f"https://api.github.com/repos/{owner}/{repo}/commits"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    await ctx.send("Couldn't fetch the latest commit right now.")
+                    return
+                data = await resp.json()
+                if isinstance(data, list) and len(data) > 0:
+                    commit = data[0]
+                    message = commit["commit"]["message"]
+                    author = commit["commit"]["author"]["name"]
+                    sha = commit["sha"][:7]
+                    commit_url = f"https://github.com/{owner}/{repo}/commit/{commit['sha']}"
+                    await ctx.send(
+                        f"**Latest Patchnote:**\n"
+                        f"`{sha}` by **{author}**\n"
+                        f"{message} at {commit['commit']['author']['date']}\n"
+                        f"[View on GitHub]({commit_url})"
+                    )
+                else:
+                    await ctx.send("No commits found.")
+
 async def setup(bot):
     await bot.add_cog(Utility(bot))
