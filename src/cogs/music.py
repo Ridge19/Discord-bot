@@ -252,5 +252,26 @@ class Music(commands.Cog):
         vc.play(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options))
         await ctx.send(f"🎶 Now playing **{key.title()}** lofi radio!")
 
+    @commands.command()
+    async def list(self, ctx):
+        """Lists all available lofi stations."""
+        stations = {
+            "lofigirl": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+            "college": "https://www.youtube.com/watch?v=5qap5aO4i9A",
+            "bootlegboy": "https://www.youtube.com/watch?v=7NOSDKb0HlU",
+            "chilledcow": "https://www.youtube.com/watch?v=DWcJFNfaw9c"
+        }
+        msg = "**Available Lofi Stations:**\n"
+        for station in stations:
+            msg += f"- {station.title()}\n"
+        
+        msg += "Use `!lofi <station>` to play a station."
+        if ctx.voice_client and ctx.voice_client.is_playing():
+            msg += "\nCurrently playing: " + ctx.voice_client.source.title
+        else:
+            msg += "\nNo station is currently playing."
+        msg += "\n\nTo suggest more stations, please contact the bot developer or use the !feedback command."
+        await ctx.send(msg)
+
 async def setup(bot):
     await bot.add_cog(Music(bot))
