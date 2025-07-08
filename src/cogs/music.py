@@ -48,7 +48,6 @@ class Music(commands.Cog):
             "artists": artists,
             "url": url
         })
-        await ctx.send(f"Playing **{title}** by **{artists}**\n{url}")
         await self.play_next(ctx)
 
     @commands.command()
