@@ -66,5 +66,12 @@ class Fun(commands.Cog):
         await ctx.send(result)
 
 
+    @commands.command()
+    async def coinflip(self, ctx):
+        """Flips a coin and returns heads or tails."""
+        result = random.choice(['Heads', 'Tails'])
+        await ctx.send(f"The coin landed on: {result}")
+
+
 async def setup(bot):
     await bot.add_cog(Fun(bot))
