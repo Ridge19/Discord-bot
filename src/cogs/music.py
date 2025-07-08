@@ -257,10 +257,11 @@ class Music(commands.Cog):
         """Lists all available lofi stations."""
         stations = {
             "lofigirl": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+            "chillmusic": "https://www.youtube.com/watch?v=5P6fObPCAmU",
             "college": "https://www.youtube.com/watch?v=5qap5aO4i9A",
-            "bootlegboy": "https://www.youtube.com/watch?v=7NOSDKb0HlU",
-            "chilledcow": "https://www.youtube.com/watch?v=DWcJFNfaw9c"
+            "bootlegboy": "https://www.youtube.com/watch?v=7NOSDKb0HlU"
         }
+        msg += "\n\nTo suggest more stations, please contact the bot developer or use the !feedback command."
         msg = "**Available Lofi Stations:**\n"
         for station in stations:
             msg += f"- {station.title()}\n"
@@ -270,7 +271,6 @@ class Music(commands.Cog):
             msg += "\nCurrently playing: " + ctx.voice_client.source.title
         else:
             msg += "\nNo station is currently playing."
-        msg += "\n\nTo suggest more stations, please contact the bot developer or use the !feedback command."
         await ctx.send(msg)
 
 async def setup(bot):
